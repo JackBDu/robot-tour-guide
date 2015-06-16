@@ -1,13 +1,13 @@
 #include <Ultrasonic.h>
 
-Ultrasonic ultrasonic(7);
+Ultrasonic ultrasonicA(4);
 void setup()
 {
   Serial.begin(9600);
 }
 void loop()
 {
-  ultrasonic.MeasureInCentimeters();
-  Serial.println(ultrasonic.RangeInCentimeters);
+  ultrasonicA.MeasureInCentimeters();
+  Serial.println(ultrasonicA.RangeInCentimeters);
   delay(100);
 }
