@@ -4,12 +4,9 @@
 
 #define MotorSpeedSet             0x82
 #define DirectionSet              0xaa
-#define Nothing                   0x01
-#define EnableStepper             0x1a
-#define UnenableStepper           0x1b
-#define Stepernu                  0x1c
-#define I2CMotorDriverAddFB       0x0f   // the address of front-back I2CMotorDriver
-#define I2CMotorDriverAddLR       0x0a   // the address of left-right I2CMotorDriver
+#define Nothing                   0x01    // place holder
+#define I2CMotorDriverFB       0x0f    // the address of front-back I2CMotorDriver
+#define I2CMotorDriverLR       0x0a    // the address of left-right I2CMotorDriver
 
 // initialize gyroscope
 ITG3200 gyro;
@@ -30,37 +27,42 @@ Ultrasonic ultrasonicBackRight(11);
 //motorSpeedA : the DC motor A speed; should be 0~100;
 //motorSpeedB: the DC motor B speed; should be 0~100;
 
-void MotorSpeedSetAB(unsigned char MotorSpeedA , unsigned char MotorSpeedB)  {
-  MotorSpeedA=map(MotorSpeedA,0,100,0,255);
-  MotorSpeedB=map(MotorSpeedB,0,100,0,255);
-  Wire.beginTransmission(I2CMotorDriverAddFB); // transmit to device I2CMotorDriverAdd
-  Wire.write(MotorSpeedSet);        // set pwm header 
-  Wire.write(MotorSpeedA);              // send pwma 
-  Wire.write(MotorSpeedB);              // send pwmb    
-  Wire.endTransmission();    // stop transmitting
-  Wire.beginTransmission(I2CMotorDriverAddLR); // transmit to device I2CMotorDriverAdd
-  Wire.write(MotorSpeedSet);        // set pwm header 
-  Wire.write(MotorSpeedA);              // send pwma 
-  Wire.write(MotorSpeedB);              // send pwmb    
-  Wire.endTransmission();    // stop transmitting
+void MotorSpeedSetFB(unsigned char MotorSpeedA, unsigned char MotorSpeedB)  {
+  MotorSpeedA = map(MotorSpeedA, 0, 100, 0, 255);
+  MotorSpeedB = map(MotorSpeedB, 0, 100, 0, 255);
+  Wire.beginTransmission(I2CMotorDriverFB);  // transmit to device I2CMotorDriverAdd
+  Wire.write(MotorSpeedSet);                    // set pwm header 
+  Wire.write(MotorSpeedA);                      // send pwma 
+  Wire.write(MotorSpeedB);                      // send pwmb    
+  Wire.endTransmission();                       // stop transmitting
+}
+
+void MotorSpeedSetLR(unsigned char MotorSpeedA, unsigned char MotorSpeedB)  {
+  MotorSpeedA = map(MotorSpeedA, 0, 100, 0, 255);
+  MotorSpeedB = map(MotorSpeedB, 0, 100, 0, 255);
+  Wire.beginTransmission(I2CMotorDriverLR);  // transmit to device I2CMotorDriverAdd
+  Wire.write(MotorSpeedSet);                    // set pwm header 
+  Wire.write(MotorSpeedA);                      // send pwma 
+  Wire.write(MotorSpeedB);                      // send pwmb    
+  Wire.endTransmission();                       // stop transmitting
 }
 
 //set the direction of DC motor. 
-void MotorDirectionSetFB(unsigned char DirectionFB)  {     //  Adjust the direction of the motors 0b0000 I4 I3 I2 I1
-  Wire.beginTransmission(I2CMotorDriverAddFB); // transmit to device I2CMotorDriverAdd
-  Wire.write(DirectionSet);        // Direction control header
-  Wire.write(DirectionFB);              // send direction control information
-  Wire.write(Nothing);              // need to send this byte as the third byte(no meaning)  
-  Wire.endTransmission();    // stop transmitting 
+void MotorDirectionSetFB(unsigned char DirectionFB)  {      //  Adjust the direction of the motors 0b0000 I4 I3 I2 I1
+  Wire.beginTransmission(I2CMotorDriverFB);              // transmit to device I2CMotorDriverAdd
+  Wire.write(DirectionSet);                                 // Direction control header
+  Wire.write(DirectionFB);                                  // send direction control information
+  Wire.write(Nothing);                                      // need to send this byte as the third byte(no meaning)  
+  Wire.endTransmission();                                   // stop transmitting 
 }
 
 //set the direction of DC motor. 
-void MotorDirectionSetLR(unsigned char DirectionLR)  {     //  Adjust the direction of the motors 0b0000 I4 I3 I2 I1
-  Wire.beginTransmission(I2CMotorDriverAddLR); // transmit to device I2CMotorDriverAdd
-  Wire.write(DirectionSet);        // Direction control header
-  Wire.write(DirectionLR);              // send direction control information
-  Wire.write(Nothing);              // need to send this byte as the third byte(no meaning)  
-  Wire.endTransmission();    // stop transmitting 
+void MotorDirectionSetLR(unsigned char DirectionLR)  {      //  Adjust the direction of the motors 0b0000 I4 I3 I2 I1
+  Wire.beginTransmission(I2CMotorDriverLR);              // transmit to device I2CMotorDriverAdd
+  Wire.write(DirectionSet);                                 // Direction control header
+  Wire.write(DirectionLR);                                  // send direction control information
+  Wire.write(Nothing);                                      // need to send this byte as the third byte(no meaning)  
+  Wire.endTransmission();                                   // stop transmitting 
 }
 
 void moveLeft() {
@@ -95,20 +97,22 @@ void rotateFB() {
   MotorDirectionSetLR(0b0101);
 }
 
-//void MotorDriectionAndSpeedSet(unsigned char Direction,unsigned char MotorSpeedA,unsigned char MotorSpeedB)  {  //you can adjust the driection and speed together
-//  MotorDirectionSet(Direction);
-//  MotorSpeedSetAB(MotorSpeedA,MotorSpeedB);  
-//}
+// void MotorDriectionAndSpeedSet(unsigned char Direction,unsigned char MotorSpeedA,unsigned char MotorSpeedB) {  //you can adjust the driection and speed together
+//   MotorDirectionSet(Direction);
+//   MotorSpeedSetAB(MotorSpeedA,MotorSpeedB);  
+// }
+
 void setup()  {
-  Wire.begin(); // join i2c bus (address optional for master)
+  Wire.begin();                 // join i2c bus (address optional for master)
   gyro.init();
-  gyro.zeroCalibrate(200,10);//sample 200 times to calibrate and it will take 200*10ms
-  delayMicroseconds(10000); //wait for motor driver to initialization
+  gyro.zeroCalibrate(200, 10);  //sample 200 times to calibrate and it will take 200*10ms
+  delayMicroseconds(10000);     //wait for motor driver to initialization
   Serial.begin(9600);
-  MotorSpeedSetAB(100, 100);
-  delay(100); //this delay needed
+  MotorSpeedSetFB(100, 100);
+  MotorSpeedSetLR(100, 100);
+  delay(100);                   //this delay needed
 }
- 
+
 void loop()  {
   ultrasonicFront.MeasureInCentimeters();
   ultrasonicBack.MeasureInCentimeters();
