@@ -1,30 +1,35 @@
-#include <Wire.h>           // for I2C
-#include <Ultrasonic.h>     // for ultrasonic ranger
-#include "ITG3200.h"        // for gyroscope
+#include <Wire.h>
+#include <Ultrasonic.h>
 
 #define MotorSpeedSet             0x82
+#define PWMFrequenceSet           0x84
 #define DirectionSet              0xaa
+#define MotorSetA                 0xa1
+#define MotorSetB                 0xa5
 #define Nothing                   0x01
 #define EnableStepper             0x1a
 #define UnenableStepper           0x1b
 #define Stepernu                  0x1c
-#define I2CMotorDriverAddFB       0x0f   // the address of front-back I2CMotorDriver
-#define I2CMotorDriverAddLR       0x0a   // the address of left-right I2CMotorDriver
+#define I2CMotorDriverAddFB        0x0f   // Set the address of the I2CMotorDriver
+#define I2CMotorDriverAddLR        0x0a   // Set the address of the I2CMotorDriver
+// set the steps you want, if 255, the stepper will rotate continuely;
 
-// initialize gyroscope
-ITG3200 gyro;
-float ax,ay,az;
+char currentDirection = 'F';
 
-// ultrasonic rangers, numbers specifying digital pins
 Ultrasonic ultrasonicLeft(3);
-Ultrasonic ultrasonicRight(2);
+Ultrasonic ultrasonicRight(4);
 Ultrasonic ultrasonicFront(5);
 Ultrasonic ultrasonicBack(6);
-Ultrasonic ultrasonicFrontLeft(8);
-Ultrasonic ultrasonicFrontRight(9);
-Ultrasonic ultrasonicBackLeft(10);
-Ultrasonic ultrasonicBackRight(11);
 
+void SteperStepset(unsigned char stepnu)
+{
+  Wire.beginTransmission(I2CMotorDriverAddFB); // transmit to device I2CMotorDriverAdd
+  Wire.beginTransmission(I2CMotorDriverAddLR); // transmit to device I2CMotorDriverAdd
+  Wire.write(Stepernu);          // Send the stepernu command 
+  Wire.write(stepnu);            // send the steps
+  Wire.write(Nothing);           // send nothing   
+  Wire.endTransmission();        // stop transmitting 
+}
 //////////////////////////////////////////////////////////////////////
 //Function to set the 2 DC motor speed
 //motorSpeedA : the DC motor A speed; should be 0~100;
@@ -71,28 +76,12 @@ void moveRight() {
   MotorDirectionSetFB(0b1001);  //0b1010  Rotating in the positive direction 
 }
 
-void pauseLR() {
-  MotorDirectionSetFB(0b0000);  //0b1010  Rotating in the positive direction 
-}
-
-void rotateLR() {
-  MotorDirectionSetFB(0b0101);
-}
-
-void moveBack() {
+void moveFront() {
   MotorDirectionSetLR(0b1001);  //0b1010  Rotating in the positive direction 
 }
 
-void moveFront() {
+void moveBack() {
   MotorDirectionSetLR(0b0110);  //0b1010  Rotating in the positive direction 
-}
-
-void pauseFB() {
-  MotorDirectionSetLR(0b0000);  //0b1010  Rotating in the positive direction 
-}
-
-void rotateFB() {
-  MotorDirectionSetLR(0b0101);
 }
 
 //void MotorDriectionAndSpeedSet(unsigned char Direction,unsigned char MotorSpeedA,unsigned char MotorSpeedB)  {  //you can adjust the driection and speed together
@@ -101,8 +90,6 @@ void rotateFB() {
 //}
 void setup()  {
   Wire.begin(); // join i2c bus (address optional for master)
-  gyro.init();
-  gyro.zeroCalibrate(200,10);//sample 200 times to calibrate and it will take 200*10ms
   delayMicroseconds(10000); //wait for motor driver to initialization
   Serial.begin(9600);
   MotorSpeedSetAB(100, 100);
@@ -111,48 +98,46 @@ void setup()  {
  
 void loop()  {
   ultrasonicFront.MeasureInCentimeters();
-  ultrasonicBack.MeasureInCentimeters();
-  if (ultrasonicFront.RangeInCentimeters < 40 && ultrasonicBack.RangeInCentimeters < 40) {
-    rotateFB();
-  } else if (ultrasonicFront.RangeInCentimeters < 40) {
-    moveBack();
-  } else if (ultrasonicBack.RangeInCentimeters < 40) {
-    moveFront();
-  }
-  
   ultrasonicLeft.MeasureInCentimeters();
   ultrasonicRight.MeasureInCentimeters();
-  if (ultrasonicLeft.RangeInCentimeters < 40 && ultrasonicRight.RangeInCentimeters < 40) {
-    rotateLR();
-  } else if (ultrasonicLeft.RangeInCentimeters < 40) {
-    moveRight();
-  } else if (ultrasonicRight.RangeInCentimeters < 40) {
-    moveLeft();
-  }
-  gyro.getAngularVelocity(&ax,&ay,&az);
-  Serial.println(az);
-  
-  ultrasonicFrontLeft.MeasureInCentimeters();
-  if (ultrasonicFrontLeft.RangeInCentimeters < 40) {
+  ultrasonicBack.MeasureInCentimeters();
+//  Serial.println(ultrasonicFront.RangeInCentimeters);
+//  Serial.println(ultrasonicLeft.RangeInCentimeters);
+//  Serial.println(ultrasonicRight.RangeInCentimeters);
+//  Serial.println(ultrasonicBack.RangeInCentimeters);
+//  Serial.println();
+//  switch (currentDirection) {
+//    case 'F':
+//      moveFront();
+//      break;
+//    case 'B':
+//      moveBack();
+//      break;
+//    case 'L':
+//      moveLeft();
+//      break;
+//    case 'R':
+//      moveRight();
+//      break;
+//  }
+  if (ultrasonicFront.RangeInCentimeters < 20) {
+//    Serial.println("B");
+//    currentDirection = 'B';
     moveBack();
+  }
+  if (ultrasonicBack.RangeInCentimeters < 20) {
+//    Serial.println("F");
+//    currentDirection = 'F';
+    moveFront();
+  }
+  if (ultrasonicLeft.RangeInCentimeters < 20) {
+//    Serial.println("R");
+//    currentDirection = 'R';
     moveRight();
   }
-  
-  ultrasonicFrontRight.MeasureInCentimeters();
-  if (ultrasonicFrontRight.RangeInCentimeters < 40) {
+  if (ultrasonicRight.RangeInCentimeters < 20) {
+//    Serial.println("L");
+//    currentDirection = 'L';
     moveLeft();
-    moveBack();
-  }
-  
-  ultrasonicBackLeft.MeasureInCentimeters();
-  if (ultrasonicBackLeft.RangeInCentimeters < 40) {
-    moveRight();
-    moveFront();    
-  }
-  
-  ultrasonicBackRight.MeasureInCentimeters();
-  if (ultrasonicBackRight.RangeInCentimeters < 40) {
-    moveLeft();
-    moveFront();   
   }
 }

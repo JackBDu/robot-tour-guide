@@ -30,7 +30,7 @@
 #define EnableStepper             0x1a
 #define UnenableStepper           0x1b
 #define Stepernu                  0x1c
-#define I2CMotorDriverAdd1        0x0a   // Set the address of the I2CMotorDriver
+#define I2CMotorDriverAdd1        0x0f   // Set the address of the I2CMotorDriver
 #define I2CMotorDriverAdd2        0x0a   // Set the address of the I2CMotorDriver
 // set the steps you want, if 255, the stepper will rotate continuely;
 void SteperStepset(unsigned char stepnu)

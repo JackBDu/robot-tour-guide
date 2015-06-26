@@ -1,6 +1,6 @@
 #include <Ultrasonic.h>
 
-Ultrasonic ultrasonicA(4);
+Ultrasonic ultrasonicA(2);
 void setup()
 {
   Serial.begin(9600);
