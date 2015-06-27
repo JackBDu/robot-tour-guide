@@ -22,6 +22,12 @@ Ultrasonic ultrasonicFrontRight(9);
 Ultrasonic ultrasonicBackLeft(10);
 Ultrasonic ultrasonicBackRight(11);
 
+int directions[4] = {0, 0, 0, 0};
+int reactionSpeed = 50;
+int moveDist = 100;
+int goDist = 400;
+int friction = 15;
+
 //////////////////////////////////////////////////////////////////////
 //Function to set the 2 DC motor speed
 // speed should set to 0~100
@@ -102,38 +108,6 @@ void motorSpeedDirectionSetFBLR(char frontMotorSpeed, char backMotorSpeed, char 
   motorDirectionSetLR(rightLeftDirection);
 }
 
-// void moveLeft() {
-//   motorDirectionSetFB(0b0110);  //0b1010  Rotating in the positive direction 
-// }
-
-// void moveRight() {
-//   motorDirectionSetFB(0b1001);  //0b1010  Rotating in the positive direction 
-// }
-
-// void pauseLR() {
-//   motorDirectionSetFB(0b0000);  //0b1010  Rotating in the positive direction 
-// }
-
-// void rotateLR() {
-//   motorDirectionSetFB(0b0101);
-// }
-
-// void moveBack() {
-//   motorDirectionSetLR(0b1001);  //0b1010  Rotating in the positive direction 
-// }
-
-// void moveFront() {
-//   motorDirectionSetLR(0b0110);  //0b1010  Rotating in the positive direction 
-// }
-
-// void pauseFB() {
-//   motorDirectionSetLR(0b0000);  //0b1010  Rotating in the positive direction 
-// }
-
-// void rotateFB() {
-//   motorDirectionSetLR(0b0101);
-// }
-
 void setup()  {
   Wire.begin();                 // join i2c bus (address optional for master)
   gyro.init();
@@ -146,52 +120,177 @@ void setup()  {
 }
 
 void loop()  {
-  // ultrasonicFront.MeasureInCentimeters();
-  // ultrasonicBack.MeasureInCentimeters();
-  // if (ultrasonicFront.RangeInCentimeters < 40 && ultrasonicBack.RangeInCentimeters < 40) {
-  //   rotateFB();
-  // } else if (ultrasonicFront.RangeInCentimeters < 40) {
-  //   moveBack();
-  // } else if (ultrasonicBack.RangeInCentimeters < 40) {
-  //   moveFront();
+
+  gyro.getAngularVelocity(&ax,&ay,&az);
+  Serial.println(az);
+
+  // if (az > 1) {
+  //   directions[0] += reactionSpeed * (az - 1) / 200 / 2;
+  //   directions[1] += reactionSpeed * (az - 1) / 200 / 2;
+  //   directions[2] += reactionSpeed * (az - 1) / 200 / 2;
+  //   directions[3] += reactionSpeed * (az - 1) / 200 / 2;
+  // } else if (az < -2) {
+  //   directions[0] -= reactionSpeed * (-2 - az) / 200 / 2;
+  //   directions[1] -= reactionSpeed * (-2 - az) / 200 / 2;
+  //   directions[2] -= reactionSpeed * (-2 - az) / 200 / 2;
+  //   directions[3] -= reactionSpeed * (-2 - az) / 200 / 2;
   // }
+
+  ultrasonicFront.MeasureInCentimeters();
+  ultrasonicBack.MeasureInCentimeters();
+  ultrasonicLeft.MeasureInCentimeters();
+  ultrasonicRight.MeasureInCentimeters();
+  ultrasonicFrontLeft.MeasureInCentimeters();
+  ultrasonicFrontRight.MeasureInCentimeters();
+  ultrasonicBackLeft.MeasureInCentimeters();
+  ultrasonicBackRight.MeasureInCentimeters();
+  int frontDist = ultrasonicFront.RangeInCentimeters;
+  int backDist = ultrasonicBack.RangeInCentimeters;
+  int leftDist = ultrasonicLeft.RangeInCentimeters;
+  int rightDist = ultrasonicRight.RangeInCentimeters;
+  int frontLeftDist = ultrasonicFrontLeft.RangeInCentimeters;
+  int frontRightDist = ultrasonicFrontRight.RangeInCentimeters;
+  int backLeftDist = ultrasonicBackLeft.RangeInCentimeters;
+  int backRightDist = ultrasonicBackRight.RangeInCentimeters;
   
-  // ultrasonicLeft.MeasureInCentimeters();
-  // ultrasonicRight.MeasureInCentimeters();
-  // if (ultrasonicLeft.RangeInCentimeters < 40 && ultrasonicRight.RangeInCentimeters < 40) {
-  //   rotateLR();
-  // } else if (ultrasonicLeft.RangeInCentimeters < 40) {
-  //   moveRight();
-  // } else if (ultrasonicRight.RangeInCentimeters < 40) {
-  //   moveLeft();
+  int largestDist = 0;
+  char largestDirection = 0;
+
+  // if (frontDist > largestDist) {
+  //   largestDist = frontDist;
+  //   largestDirection = 0;
+  // } else if (frontRightDist > largestDist) {
+  //   largestDist = frontRightDist;
+  //   largestDirection = 1;
+  // } else if (rightDist > largestDist) {
+  //   largestDist = rightDist;
+  //   largestDirection = 2;
+  // } else if (backRightDist > largestDist) {
+  //   largestDist = backRightDist;
+  //   largestDirection = 3;
+  // } else if (backDist > largestDist) {
+  //   largestDist = backDist;
+  //   largestDirection = 4;
+  // } else if (backLeftDist > largestDist) {
+  //   largestDist = backLeftDist;
+  //   largestDirection = 5;
+  // } else if (leftDist > largestDist) {
+  //   largestDist = leftDist;
+  //   largestDirection = 6;
+  // } else if (frontLeftDist > largestDist) {
+  //   largestDist = frontLeftDist;
+  //   largestDirection = 7;
   // }
-  // gyro.getAngularVelocity(&ax,&ay,&az);
-  // Serial.println(az);
-  
-  // ultrasonicFrontLeft.MeasureInCentimeters();
-  // if (ultrasonicFrontLeft.RangeInCentimeters < 40) {
-  //   moveBack();
-  //   moveRight();
+
+  // if (largestDist > goDist) {
+  //   switch (largestDirection) {
+  //       case 0: // go front
+  //         directions[2] += reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[3] -= reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         break;
+  //       case 1: // go front right
+  //         directions[2] += reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[3] -= reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[0] += reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[1] -= reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         break;
+  //       case 2: // go right
+  //         directions[0] += reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[1] -= reactionSpeed * (largestDist - goDist) / (512 - goDist);   
+  //         break;
+  //       case 3: // go back right
+  //         directions[2] -= reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[3] += reactionSpeed * (largestDist - goDist) / (512 - goDist);  
+  //         directions[0] += reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[1] -= reactionSpeed * (largestDist - goDist) / (512 - goDist); 
+  //         break;
+  //       case 4: // go back
+  //         directions[2] -= reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[3] += reactionSpeed * (largestDist - goDist) / (512 - goDist);   
+  //         break;
+  //       case 5: // go back left
+  //         directions[2] -= reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[3] += reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[0] -= reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[1] += reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         break;
+  //       case 6: // go left
+  //         directions[0] -= reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[1] += reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         break;
+  //       case 7: // go front left
+  //         directions[2] -= reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[3] += reactionSpeed * (largestDist - goDist) / (512 - goDist);  
+  //         directions[0] += reactionSpeed * (largestDist - goDist) / (512 - goDist);
+  //         directions[1] -= reactionSpeed * (largestDist - goDist) / (512 - goDist); 
+  //         break;
+  //       default:
+  //         break;
+  //   }
   // }
-  
-  // ultrasonicFrontRight.MeasureInCentimeters();
-  // if (ultrasonicFrontRight.RangeInCentimeters < 40) {
-  //   moveLeft();
-  //   moveBack();
-  // }
-  
-  // ultrasonicBackLeft.MeasureInCentimeters();
-  // if (ultrasonicBackLeft.RangeInCentimeters < 40) {
-  //   moveRight();
-  //   moveFront();    
-  // }
-  
-  // ultrasonicBackRight.MeasureInCentimeters();
-  // if (ultrasonicBackRight.RangeInCentimeters < 40) {
-  //   moveLeft();
-  //   moveFront();   
-  // }
-  while(1) {
-    motorSpeedDirectionSetFBLR(100,100,-100,100);
+
+  if (frontDist < moveDist) {
+    directions[2] -= reactionSpeed * (moveDist - frontDist) / moveDist;
+    directions[3] += reactionSpeed * (moveDist - frontDist) / moveDist;
+  }
+
+  if (backDist < moveDist) {
+    directions[2] += reactionSpeed * (moveDist - backDist) / moveDist;
+    directions[3] -= reactionSpeed * (moveDist - backDist) / moveDist;
+  }
+
+  if (leftDist < moveDist) {
+    directions[0] += reactionSpeed * (moveDist - leftDist) / moveDist;
+    directions[1] -= reactionSpeed * (moveDist - leftDist) / moveDist;
+  }
+
+  if (rightDist < moveDist) {
+    directions[0] -= reactionSpeed * (moveDist - rightDist) / moveDist;
+    directions[1] += reactionSpeed * (moveDist - rightDist) / moveDist;
+  }
+
+  if (frontLeftDist < moveDist) {
+    directions[2] -= reactionSpeed * (moveDist - frontLeftDist) / moveDist;
+    directions[3] += reactionSpeed * (moveDist - frontLeftDist) / moveDist;
+    directions[0] += reactionSpeed * (moveDist - frontLeftDist) / moveDist;
+    directions[1] -= reactionSpeed * (moveDist - frontLeftDist) / moveDist;
+  }
+
+  if (frontRightDist < moveDist) {
+    directions[2] -= reactionSpeed * (moveDist - frontRightDist) / moveDist;
+    directions[3] += reactionSpeed * (moveDist - frontRightDist) / moveDist;
+    directions[0] -= reactionSpeed * (moveDist - frontRightDist) / moveDist;
+    directions[1] += reactionSpeed * (moveDist - frontRightDist) / moveDist;
+  }
+    
+  if (backLeftDist < moveDist) {
+    directions[2] += reactionSpeed * (moveDist - backLeftDist) / moveDist;
+    directions[3] -= reactionSpeed * (moveDist - backLeftDist) / moveDist;
+    directions[0] += reactionSpeed * (moveDist - backLeftDist) / moveDist;
+    directions[1] -= reactionSpeed * (moveDist - backLeftDist) / moveDist;
+  }
+
+  if (backRightDist < moveDist) {
+    directions[2] += reactionSpeed * (moveDist - backRightDist) / moveDist;
+    directions[3] -= reactionSpeed * (moveDist - backRightDist) / moveDist;
+    directions[0] -= reactionSpeed * (moveDist - backRightDist) / moveDist;
+    directions[1] += reactionSpeed * (moveDist - backRightDist) / moveDist;
+  }
+    
+  // set motor direction and speed
+  for (int i = 0; i < 4; i++) {
+    if (directions[i] > 100) {
+      directions[i] = 100;
+    } else if (directions[i] < -100) {
+      directions[i] = -100;
+    }
+  }
+  motorSpeedDirectionSetFBLR(directions[0], directions[1], directions[2], directions[3]);
+  for (int i = 0; i < 4; i++) {
+    if (directions[i] > friction) {
+      directions[i] -= friction;
+    } else if (directions[i] < -friction) {
+      directions[i] += friction;
+    }
   }
 }
