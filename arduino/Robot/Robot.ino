@@ -286,7 +286,7 @@ void loop()  {
     }
   }
   motorSpeedDirectionSetFBLR(directions[0], directions[1], directions[2], directions[3]);
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < friction; i++) {
     if (directions[i] > friction) {
       directions[i] -= friction;
     } else if (directions[i] < -friction) {
