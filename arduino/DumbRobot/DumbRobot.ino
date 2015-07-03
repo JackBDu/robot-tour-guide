@@ -22,6 +22,27 @@ Ultrasonic ultrasonicBackRight(11);
 int rangers[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 int motors[4] = {0, 0, 0, 0};
 char motorLabels[4] = {'F', 'R', 'B', 'L'};
+int frontMotorNum = 0;
+
+// front, frontRight, right, rightBack, back, backLeft, left, frontLeft
+void getRangers() {
+  ultrasonicFront.MeasureInCentimeters();
+  ultrasonicBack.MeasureInCentimeters();
+  ultrasonicLeft.MeasureInCentimeters();
+  ultrasonicRight.MeasureInCentimeters();
+  ultrasonicFrontLeft.MeasureInCentimeters();
+  ultrasonicFrontRight.MeasureInCentimeters();
+  ultrasonicBackLeft.MeasureInCentimeters();
+  ultrasonicBackRight.MeasureInCentimeters();
+  rangers[0] = ultrasonicFront.RangeInCentimeters;
+  rangers[1] = ultrasonicFrontRight.RangeInCentimeters;
+  rangers[2] = ultrasonicRight.RangeInCentimeters;
+  rangers[3] = ultrasonicBackRight.RangeInCentimeters;
+  rangers[4] = ultrasonicBack.RangeInCentimeters;
+  rangers[5] = ultrasonicBackLeft.RangeInCentimeters;
+  rangers[6] = ultrasonicLeft.RangeInCentimeters;
+  rangers[7] = ultrasonicFrontLeft.RangeInCentimeters;
+}
 
 //////////////////////////////////////////////////////////////////////
 //Function to set the 2 DC motor speed
@@ -116,24 +137,101 @@ void setMotors() {
   motorSpeedDirectionSetFRBL(motors[0], motors[1], motors[2], motors[3]);
 }
 
-// front, frontRight, right, rightBack, back, backLeft, left, frontLeft
-void getRangers() {
-  ultrasonicFront.MeasureInCentimeters();
-  ultrasonicBack.MeasureInCentimeters();
-  ultrasonicLeft.MeasureInCentimeters();
-  ultrasonicRight.MeasureInCentimeters();
-  ultrasonicFrontLeft.MeasureInCentimeters();
-  ultrasonicFrontRight.MeasureInCentimeters();
-  ultrasonicBackLeft.MeasureInCentimeters();
-  ultrasonicBackRight.MeasureInCentimeters();
-  rangers[0] = ultrasonicFront.RangeInCentimeters;
-  rangers[1] = ultrasonicFrontRight.RangeInCentimeters;
-  rangers[2] = ultrasonicRight.RangeInCentimeters;
-  rangers[3] = ultrasonicBackRight.RangeInCentimeters;
-  rangers[4] = ultrasonicBack.RangeInCentimeters;
-  rangers[5] = ultrasonicBackLeft.RangeInCentimeters;
-  rangers[6] = ultrasonicLeft.RangeInCentimeters;
-  rangers[7] = ultrasonicFrontLeft.RangeInCentimeters;
+void resetMotors() {
+  motors[0] = 0;
+  motors[1] = 0;
+  motors[2] = 0;
+  motors[3] = 0;
+}
+
+int getFrontMotorNum() {
+  return frontMotorNum > 3 ? frontMotorNum - 4 : frontMotorNum;
+}
+
+int getRightMotorNum() {
+  return frontMotorNum + 1 > 3 ? frontMotorNum - 3 : frontMotorNum + 1;
+}
+
+int getBackMotorNum() {
+  return frontMotorNum + 2 > 3 ? frontMotorNum - 2 : frontMotorNum + 2;
+}
+
+int getLeftMotorNum() {
+  return frontMotorNum + 3 > 3 ? frontMotorNum - 1 : frontMotorNum + 3;
+}
+
+int getFrontRangerNum() {
+  int toReturn = frontMotorNum * 2;
+  return toReturn > 7 ? toReturn - 8 : toReturn;
+}
+
+int getFrontRightRangerNum() {
+  int toReturn = frontMotorNum * 2 + 1;
+  return toReturn > 7 ? toReturn - 8 : toReturn;
+}
+
+int getRightRangerNum() {
+  int toReturn = frontMotorNum * 2 + 2;
+  return toReturn > 7 ? toReturn - 8 : toReturn;
+}
+
+int getBackRightRangerNum() {
+  int toReturn = frontMotorNum * 2 + 3;
+  return toReturn > 7 ? toReturn - 8 : toReturn;
+}
+
+int getBackRangerNum() {
+  int toReturn = frontMotorNum * 2 + 4;
+  return toReturn > 7 ? toReturn - 8 : toReturn;
+}
+
+int getBackLeftRangerNum() {
+  int toReturn = frontMotorNum * 2 + 5;
+  return toReturn > 7 ? toReturn - 8 : toReturn;
+}
+
+int getLeftRangerNum() {
+  int toReturn = frontMotorNum * 2 + 6;
+  return toReturn > 7 ? toReturn - 8 : toReturn;
+}
+
+int getFrontLeftRangerNum() {
+  int toReturn = frontMotorNum * 2 + 7;
+  return toReturn > 7 ? toReturn - 8 : toReturn;
+}
+
+void adjustClockwise() {
+  motors[getFrontMotorNum()] = 10;
+  motors[getBackMotorNum()] = 10;
+}
+
+void adjustCounterClockwise() {
+  motors[getFrontMotorNum()] = -10;
+  motors[getBackMotorNum()] = -10;
+}
+
+void moveFoward() {
+  resetMotors();
+  motors[getLeftMotorNum()] = 100;
+  motors[getRightMotorNum()] = -100;
+  int leftRightDiff = rangers[getLeftRangerNum()] - rangers[getRightRangerNum()];
+  if (rangers[getLeftRangerNum()] < 300 && rangers[getRightRangerNum()] < 300) {
+    if (leftRightDiff > 30) {
+      adjustCounterClockwise();
+    } else if (leftRightDiff < -30) {
+      adjustClockwise();
+    }
+  }
+  if (rangers[getRightRangerNum()] > 500 && rangers[getLeftRangerNum()] < 500) {
+    frontMotorNum = getRightRangerNum()/2;
+  }
+  SeeedGrayOled.setTextXY(10, 0);  //set Cursor to ith line, 0th column
+  SeeedGrayOled.putNumber(leftRightDiff);
+  SeeedGrayOled.putString("   ");
+}
+
+void analyzeData() {
+  moveFoward();
 }
 
 void oledInit() {
@@ -148,10 +246,10 @@ void oledPrint() {
   for(char i=0; i < 8; i++) {
     SeeedGrayOled.setTextXY(i, 0);
     SeeedGrayOled.putNumber(rangers[i]);
-    if (rangers[i] < 100)
+    if (rangers[i] < 100) {
       SeeedGrayOled.putString(" ");
     }
-    if (rangers[i] < 10)
+    if (rangers[i] < 10) {
       SeeedGrayOled.putString(" ");
     }
   }
@@ -160,20 +258,13 @@ void oledPrint() {
     SeeedGrayOled.setTextXY(i, 5);  //set Cursor to ith line, 0th column
     SeeedGrayOled.putChar(motorLabels[i]);
     SeeedGrayOled.putNumber(motors[i]);
-    if (motors[i] < 100)
+    if (motors[i] < 100) {
       SeeedGrayOled.putString(" ");
     }
-    if (motors[i] < 10)
+    if (motors[i] < 10) {
       SeeedGrayOled.putString(" ");
     }
   }
-}
-
-void analyzeData() {
-  motors[0] = 100;
-  motors[1] = 100;
-  motors[2] = 100;
-  motors[3] = 100;
 }
 
 void setup()  {
