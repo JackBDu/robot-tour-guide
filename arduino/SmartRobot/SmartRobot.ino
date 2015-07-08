@@ -313,13 +313,13 @@ avoidObctable(frontDist, backDist, leftDist, rightDist, frontLeftDist, frontRigh
   // }
 
   // add a bit friction
-  for (int i = 0; i < friction; i++) {
-    if (directions[i] > friction) {
-      directions[i] -= friction;
-    } else if (directions[i] < -friction) {
-      directions[i] += friction;
-    }
-  }
+  // for (int i = 0; i < friction; i++) {
+  //   if (directions[i] > friction) {
+  //     directions[i] -= friction;
+  //   } else if (directions[i] < -friction) {
+  //     directions[i] += friction;
+  //   }
+  // }
 
   // set motor direction and speed
   for (int i = 0; i < 4; i++) {
